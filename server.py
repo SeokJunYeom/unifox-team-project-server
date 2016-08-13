@@ -5,8 +5,8 @@ from select import *
 import sys
 from time import ctime
 
-Host = ''
-PORT = 56789
+HOST = ''
+PORT = 50010
 BUFSIZE = 1024
 ADDR = (HOST, PORT)
 
@@ -21,4 +21,23 @@ serverSocket.bind(ADDR)
 # 10개의 클라이언트 대기 가능
 serverSocket.listen(10)
 connection_list = [serverSocket]
-print("채팅 서버 시작")
+print("서버 시작")
+
+while connection_list:
+	try:
+		print("요청 대기")
+
+		# select로 요청 받고 10초마다 블럭킹 해제
+		read_socket, write_socket, error_socket = select(connection_list, [], [], 10)
+
+		for sock in read_socket:
+			if sock == serverSocket:
+				clientSocket, addr_info = serverSocket.accept()
+				connection_list.append(clientSocket)
+				print("[%s] 클라이언트(%s) 연결 성공." % (ctime(), addr_info[0]))
+				serverSocket.close()
+				sys.exit()
+
+	except KeyboardInterrupt:
+		serverSocket.close()
+		sys.exit()
