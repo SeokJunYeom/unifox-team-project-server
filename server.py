@@ -35,8 +35,17 @@ while connection_list:
 				clientSocket, addr_info = serverSocket.accept()
 				connection_list.append(clientSocket)
 				print("[%s] 클라이언트(%s) 연결 성공." % (ctime(), addr_info[0]))
-				serverSocket.close()
-				sys.exit()
+
+			else:
+				data = sock.recv(BUFSIZE)
+				if data:
+					print("[%s] 클라이언트로부터 데이터를 전달 받음." % ctime())
+					print("받은 데이터 : %s" % data)
+
+				else:
+					print("[%s] 클라이언트 (%s) 와 연결 끊김." % (ctime(), sock))
+					connection_list.remove(sock)
+					sock.close()
 
 	except KeyboardInterrupt:
 		serverSocket.close()
