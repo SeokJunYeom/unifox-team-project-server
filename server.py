@@ -37,13 +37,19 @@ while connection_list:
 				print("[%s] 클라이언트(%s) 연결 성공." % (ctime(), addr_info[0]))
 
 			else:
-				data = sock.recv(BUFSIZE)
-				if data:
-					print("[%s] 클라이언트로부터 데이터를 전달 받음." % ctime())
-					print("받은 데이터 : %s" % data)
+				try:
+					data = sock.recv(BUFSIZE)
 
-				else:
-					print("[%s] 클라이언트 (%s) 와 연결 끊김." % (ctime(), sock))
+					if data:
+						print("[%s] 클라이언트로부터 데이터를 전달 받음." % ctime())
+						print("받은 데이터 : %s" % data)
+
+					else:
+						print("[%s] 클라이언트와 연결 끊김." % ctime())
+						connection_list.remove(sock)
+						sock.close()
+
+				except:
 					connection_list.remove(sock)
 					sock.close()
 
