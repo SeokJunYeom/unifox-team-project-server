@@ -23,6 +23,21 @@ serverSocket.listen(10)
 connection_list = [serverSocket]
 print("서버 시작")
 
+# 용량이 큰 파일 받아오기
+def revall(buf, sock, count):
+	while count:
+		print(count)
+		
+		newbuf = sock.recv(count)
+
+		if not newbuf:
+			return None
+
+		buf += newbuf
+		count -= len(newbuf)
+
+	return buf
+
 while connection_list:
 	try:
 		print("요청 대기")
