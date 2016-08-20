@@ -57,12 +57,27 @@ while connection_list:
 
 					if data:
 						print("[%s] 클라이언트로부터 데이터를 전달 받음." % ctime())
-						print("받은 데이터 : %s" % data)
 
 					else:
 						print("[%s] 클라이언트와 연결 끊김." % ctime())
 						connection_list.remove(sock)
 						sock.close()
+
+					# 받은 데이터가 image 파일 일 때
+					if data.split("*")[0] == "image":
+						print("[%s] 클라이언트로부터 이미지 데이터를 받는 중." % ctime())
+
+						imgName = data.split("*")[1]
+						imgLen = data.split("*")[2]
+						
+						# 헤더와 이미지 데이터를 분리
+						imgData = data[int(len(imgLen)) + int(len(imgName)) + 8:]
+
+						# 못 받은 데이터를 마저 받고 /image 에 저장
+						imgData = revall(imgData, sock, int(imgLen) - len(imgData))
+						imgProcess.imgSave(imgName, imgProcess.imgDecode(imgData))
+
+						print("[%s] 클라이언트로부터 이미지 전달 받음." % ctime())
 
 				except:
 					connection_list.remove(sock)
