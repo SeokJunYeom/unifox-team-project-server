@@ -2,9 +2,10 @@
 
 from socket import *
 from select import *
-import sys
 from time import ctime
-
+import os, sys
+import imgProcess
+ 
 HOST = ''
 PORT = 50010
 BUFSIZE = 1024
@@ -23,19 +24,27 @@ serverSocket.listen(10)
 connection_list = [serverSocket]
 print("서버 시작")
 
-# 용량이 큰 파일 받아오기
-def revall(buf, sock, count):
-	while count:
-		print(count)
-		
-		newbuf = sock.recv(count)
+def dir():
+	string = ""
 
+	for root, dirs, files in os.walk("image/"):
+		for file in files:
+			string += file + ","
+
+	print(string)
+
+	return string
+
+def revall(buf, sock, count):	
+	while count:
+		newbuf = sock.recv(count)
+		
 		if not newbuf:
 			return None
 
 		buf += newbuf
 		count -= len(newbuf)
-
+	
 	return buf
 
 while connection_list:
@@ -59,30 +68,40 @@ while connection_list:
 						print("[%s] 클라이언트로부터 데이터를 전달 받음." % ctime())
 
 					else:
-						print("[%s] 클라이언트와 연결 끊김." % ctime())
+						print("[%] 클라이언트와 연결 끊김." % ctime())
 						connection_list.remove(sock)
 						sock.close()
 
-					# 받은 데이터가 image 파일 일 때
-					if data.split("*")[0] == "image":
+					head = data.split("*")[0]
+
+					if head == "image":
 						print("[%s] 클라이언트로부터 이미지 데이터를 받는 중." % ctime())
 
 						imgName = data.split("*")[1]
 						imgLen = data.split("*")[2]
-						
-						# 헤더와 이미지 데이터를 분리
 						imgData = data[int(len(imgLen)) + int(len(imgName)) + 8:]
 
-						# 못 받은 데이터를 마저 받고 /image 에 저장
 						imgData = revall(imgData, sock, int(imgLen) - len(imgData))
 						imgProcess.imgSave(imgName, imgProcess.imgDecode(imgData))
 
 						print("[%s] 클라이언트로부터 이미지 전달 받음." % ctime())
 
+					if head == "request":
+						if data.split("*")[1] == "dir":
+							sock.send(dir())
+							print("[%s] 클라이언트에 image/ 디렉토리 목록 넘겨줌." % ctime())
+
+						else:
+							imgStr = imgProcess.imgToString(data.split("*")[1])
+							sock.send(imgStr)
+							print("[%s] 클라이언트에 이미지 전달." % ctime())
+
 				except:
+					print("[%s] 클라이언트와 연결 끊김." % ctime())
 					connection_list.remove(sock)
 					sock.close()
 
 	except KeyboardInterrupt:
 		serverSocket.close()
 		sys.exit()
+
